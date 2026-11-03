@@ -1,26 +1,89 @@
-# DocuMind AI — PostgreSQL Edition
+# DocuMind – AI-Powered PDF Question Answering
 
-An AI-powered PDF question-answering application built with React + Vite, FastAPI, PostgreSQL, hybrid retrieval (BM25 + FAISS), and Gemini.
+DocuMind is a full-stack AI-powered PDF question-answering application that allows users to upload PDF documents and ask questions about their contents.
+
+It combines semantic search, keyword-based retrieval and Large Language Model (LLM) response generation to provide context-aware answers with page-level source citations.
 
 ## Features
 
-- Upload text-based PDFs (up to 25 MB)
-- Extract text, split it into overlapping chunks, and store documents/chunks in PostgreSQL
-- Hybrid retrieval: semantic search (Sentence Transformers + FAISS) and keyword search (BM25), fused with Reciprocal Rank Fusion
-- Gemini-generated answers grounded in retrieved PDF excerpts
-- Page-level source references
-- Conversation history persisted in PostgreSQL
-- Retrieval indexes rebuilt from PostgreSQL when the backend starts
+- Upload and manage text-based PDF documents (up to 25 MB).
+- Extract PDF text using PyMuPDF.
+- Split extracted text into overlapping chunks.
+- Store documents, extracted chunks and conversation history in PostgreSQL.
+- **Semantic retrieval:** Sentence Transformers (`all-MiniLM-L6-v2`) and FAISS.
+- **Keyword retrieval:** BM25.
+- **Hybrid retrieval:** Reciprocal Rank Fusion (RRF) combines semantic and keyword search results.
+- **AI-generated answers:** Groq API generates answers grounded in retrieved document excerpts.
+- Page-level source references for answers.
+- Clickable citations that navigate to the relevant source excerpts.
+- Persistent conversation history.
+- Document deletion and retrieval-index rebuilding from PostgreSQL on backend startup.
+- Markdown-formatted AI responses.
 
-## 1. Install prerequisites
+## Technology Stack
 
-Install:
-- Python 3.10 or 3.11
-- Node.js LTS (includes npm)
+| Component | Technology |
+|---|---|
+| Frontend | React, Vite, JavaScript |
+| Backend | Python, FastAPI |
+| Database | PostgreSQL, SQLAlchemy |
+| PDF processing | PyMuPDF |
+| Embeddings | Sentence Transformers |
+| Vector search | FAISS |
+| Keyword search | BM25 |
+| Ranking fusion | Reciprocal Rank Fusion |
+| LLM | Groq API |
+| Response rendering | React Markdown |
+
+## Project Architecture
+
+1. **Document ingestion:** Users upload PDFs through the React frontend.
+2. **Text extraction:** FastAPI processes the uploaded documents using PyMuPDF.
+3. **Chunking:** Extracted text is divided into overlapping chunks.
+4. **Storage:** Documents and chunks are stored in PostgreSQL.
+5. **Embedding generation:** Sentence Transformers converts chunks into vector embeddings.
+6. **Indexing:** FAISS indexes semantic vectors, while BM25 indexes document text.
+7. **Hybrid retrieval:** Semantic and keyword search results are combined using Reciprocal Rank Fusion.
+8. **Answer generation:** Retrieved excerpts are passed to Groq to generate context-aware answers.
+9. **Source attribution:** Responses include page-level citations linked to the corresponding PDF excerpts.
+
+## Project Structure
+
+```text
+DocuMind/
+├── backend/
+│   ├── main.py
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── uploads/
+│
+├── frontend/
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── vite.config.js
+│   └── src/
+│       ├── App.jsx
+│       ├── main.jsx
+│       └── style.css
+│
+├── README.md
+└── .gitignore
+```
+
+## Installation and Setup
+
+### Prerequisites
+
+Install the following:
+
+- Python 3.10 or 3.11 (64-bit)
+- Node.js LTS and npm
 - PostgreSQL 15 or newer
-- Git (optional)
+- Git
 
-Check versions in PowerShell:
+Check the installed versions:
+
 ```powershell
 py --version
 node --version
@@ -28,145 +91,140 @@ npm --version
 psql --version
 ```
 
-## 2. Create the PostgreSQL database
+### 1. Create the PostgreSQL database
 
 Open pgAdmin:
-1. Connect to your local PostgreSQL server.
-2. Right-click **Databases** → **Create** → **Database**.
-3. Name it `documind`.
-4. Save.
 
-Or open SQL Shell (psql) and run:
+1. Connect to your local PostgreSQL server.
+2. Right-click **Databases**.
+3. Select **Create → Database**.
+4. Enter `documind` as the database name.
+5. Save.
+
+Alternatively, execute:
+
 ```sql
 CREATE DATABASE documind;
 ```
 
-The app creates its tables automatically on first backend startup. You do not need to manually create tables.
+The application automatically creates its database tables when the backend starts.
 
-## 3. Extract the ZIP
+### 2. Configure the backend
 
-1. Download `DocuMind-AI-PostgreSQL.zip`.
-2. In Windows File Explorer, right-click it → **Extract All…**
-3. Choose a convenient location, e.g. `C:\Projects\`.
-4. You should see the `DocuMind-AI-PostgreSQL` folder.
-5. Open that folder in VS Code: **File → Open Folder**.
+Open a terminal in the project root:
 
-Do not run the project while it is still inside the ZIP preview.
-
-## 4. Configure the backend
-
-Open VS Code terminal (PowerShell):
 ```powershell
 cd backend
+
 py -3.11 -m venv .venv
+
 .\.venv\Scripts\Activate.ps1
+
 python -m pip install --upgrade pip
+
 pip install -r requirements.txt
+
 Copy-Item .env.example .env
 ```
 
-Open `backend/.env` and edit:
+Open `backend/.env` and configure:
+
 ```env
 DATABASE_URL=postgresql+psycopg2://postgres:YOUR_POSTGRES_PASSWORD@localhost:5432/documind
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY
-GEMINI_MODEL=gemini-2.5-flash
+
+GROQ_API_KEY=YOUR_GROQ_API_KEY
 ```
-Replace `YOUR_POSTGRES_PASSWORD` with the password you created for the PostgreSQL `postgres` user. Do not add angle brackets or quotes. If your PostgreSQL username is not `postgres`, replace that too.
 
-### Get a Gemini API key
-1. Open https://aistudio.google.com/
-2. Sign in with your Google account.
-3. Open **Get API key** / **API keys**.
-4. Create an API key in a Google Cloud project.
-5. Copy it into `GEMINI_API_KEY` in `backend/.env`.
+Replace the PostgreSQL password and Groq API key with your own credentials.
 
-Keep the key private. Never commit `.env` to GitHub. Gemini availability and free quotas depend on model, region, and account.
+### 3. Obtain a Groq API key
 
-## 5. Start the backend
+1. Visit [Groq Console](https://console.groq.com/).
+2. Sign in or create an account.
+3. Navigate to API Keys.
+4. Generate an API key.
+5. Add it to `backend/.env` as `GROQ_API_KEY`.
 
-Make sure PostgreSQL is running. In the backend terminal:
+Keep your API key private. Never commit your `.env` file to GitHub.
+
+The Groq model is configured in the backend.
+
+### 4. Start the backend
+
+Ensure PostgreSQL is running.
+
+From the `backend` directory, execute:
+
 ```powershell
 uvicorn main:app --reload
 ```
-Expected:
-- API: http://127.0.0.1:8000
-- Interactive API docs: http://127.0.0.1:8000/docs
 
-On first run, Sentence Transformers downloads `all-MiniLM-L6-v2`; this can take a few minutes. PostgreSQL tables are created automatically.
+Backend API:
 
-## 6. Start the React frontend
+`http://127.0.0.1:8000`
 
-Open a **second** VS Code terminal at the project root:
+Interactive API documentation:
+
+`http://127.0.0.1:8000/docs`
+
+On first startup, Sentence Transformers downloads the `all-MiniLM-L6-v2` embedding model. This may take a few minutes.
+
+### 5. Start the frontend
+
+Open a second terminal at the project root:
+
 ```powershell
 cd frontend
+
 npm install
+
 npm run dev
 ```
-Open the URL printed by Vite, normally http://localhost:5173.
 
-## 7. Test the app
+Open the local URL displayed by Vite, normally:
 
-1. Upload a text-based PDF.
-2. Select its checkbox in the left sidebar.
-3. Ask a question whose answer is present in the PDF.
-4. Check the page number and source excerpt under the answer.
-5. Refresh the browser. Conversation history should remain.
-6. Stop and restart the backend. Documents and chunks remain in PostgreSQL; retrieval indexes rebuild from stored chunks.
+`http://localhost:5173`
 
-## Folder structure
+## Testing the Application
 
-```text
-DocuMind-AI-PostgreSQL/
-├── backend/
-│   ├── main.py
-│   ├── requirements.txt
-│   ├── .env.example
-│   └── uploads/              # created automatically; PDFs saved here
-├── frontend/
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   └── src/
-│       ├── App.jsx
-│       ├── main.jsx
-│       └── style.css
-├── README.md
-└── .gitignore
-```
+1. Open DocuMind in your browser.
+2. Upload a text-based PDF document.
+3. Select the uploaded document.
+4. Ask a question related to its contents.
+5. Review the generated answer.
+6. Check the page-level source citations.
+7. Click a citation to navigate to its corresponding source excerpt.
+8. Refresh the browser and verify that conversation history persists.
+9. Restart the backend and verify that documents and chunks remain available through PostgreSQL.
 
-## Troubleshooting
+## Environment Variables
 
-**`password authentication failed for user postgres`**
-- Recheck the password in `backend/.env`.
-- Try connecting in pgAdmin with the same username/password.
-- Make sure PostgreSQL service is running.
+The backend requires the following environment variables:
 
-**`database "documind" does not exist`**
-- Create it using pgAdmin or `CREATE DATABASE documind;`.
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `GROQ_API_KEY` | API key for Groq-based answer generation |
 
-**`GEMINI_API_KEY is missing`**
-- Check that the file is named exactly `.env`, is inside `backend/`, and contains the key.
+Refer to `backend/.env.example` for the configuration template.
 
-**Gemini model error**
-- Check which model is enabled for your account in Google AI Studio and update `GEMINI_MODEL`.
+## Current Limitations
 
-**`No selectable text found`**
-- This MVP extracts embedded/selectable PDF text. Scanned PDFs need OCR, which is not included.
+- OCR for scanned PDFs is not implemented. The application currently processes PDFs containing selectable text.
+- User authentication and multi-user access control are not implemented.
+- Uploaded PDFs are stored in the backend's local uploads directory.
+- FAISS and BM25 retrieval indexes are rebuilt in memory from stored PostgreSQL chunks when the backend starts.
+- The application is currently configured as a locally running portfolio MVP and requires additional infrastructure and security work before production deployment.
 
-**PowerShell blocks activation**
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\.venv\Scripts\Activate.ps1
-```
+## Future Improvements
 
-**FAISS / sentence-transformers installation issue**
-- Use Python 3.10 or 3.11 in a 64-bit environment, then recreate the virtual environment.
+- Cloud-based PDF storage.
+- User authentication and access control.
+- OCR support for scanned documents.
+- Production deployment with persistent storage.
+- Automated testing and improved error handling.
+- Retrieval and response performance optimisation.
 
-## Important MVP limitations
+---
 
-- No user authentication or multi-user access control.
-- Scanned PDF OCR is not implemented.
-- Uploaded PDF files and extracted chunks persist on the backend machine; this is a local demo, not a production deployment.
-- Embeddings and FAISS/BM25 indexes are rebuilt in memory from PostgreSQL at backend startup.
-- The Gemini API is called for answer generation; embeddings and retrieval run locally.
-- The app is a portfolio MVP. Add authentication, migrations, rate limiting, tests, cloud deployment, and stronger file validation before production use.
+**DocuMind** – Making information retrieval from PDF documents easier through hybrid search and AI-powered question answering.
