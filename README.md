@@ -227,4 +227,3 @@ Refer to `backend/.env.example` for the configuration template.
 
 ---
 
-**DocuMind** – Making information retrieval from PDF documents easier through hybrid search and AI-powered question answering.
