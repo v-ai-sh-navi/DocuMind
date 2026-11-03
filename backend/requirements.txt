@@ -9,4 +9,4 @@ sentence-transformers==4.1.0
 faiss-cpu==1.11.0
 rank-bm25==0.2.2
 numpy<2.3
-google-genai==1.11.0
+groq==1.7.0
