@@ -208,6 +208,26 @@ The backend requires the following environment variables:
 
 Refer to `backend/.env.example` for the configuration template.
 
+## Application Screenshots
+
+### 1. Main Dashboard
+
+The DocuMind interface for uploading documents and interacting with the AI-powered PDF assistant.
+<img width="1907" height="906" alt="Screenshot 2026-11-04 015643" src="https://github.com/user-attachments/assets/67690f31-7b94-40e4-a056-9bbf3c631421" />
+
+
+### 2. AI-Powered Question Answering
+
+Context-aware answers generated using retrieved PDF content and the Groq API.
+<img width="1910" height="897" alt="Screenshot 2026-11-04 015943" src="https://github.com/user-attachments/assets/3c899541-9a8f-4ebc-a56a-25df8aaef1c9" />
+
+
+### 3. Source Citations
+
+Page-level source references that allow users to navigate to the relevant document excerpts.
+<img width="1901" height="900" alt="Screenshot 2026-11-04 020017" src="https://github.com/user-attachments/assets/18d714b0-5b6a-42c4-b404-baf2f76fb68b" />
+
+
 ## Current Limitations
 
 - OCR for scanned PDFs is not implemented. The application currently processes PDFs containing selectable text.
